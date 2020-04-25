@@ -1,0 +1,427 @@
+openapi: 3.0.1
+info:
+  title: Signicat - MobileID API
+  description: Signicat's MobileID API RESTful Microservice
+  contact:
+    name: API Support
+    url: https://developer.signicat.com/support/
+    email: support@signicat.com
+servers:
+- url: https://dev01.signicat.com/mobileid
+  description: On dev01 env
+  variables: {}
+- url: http://172.16.26.59:9001
+  description: Local testing
+  variables: {}
+tags:
+- name: registration
+- name: authentication
+paths:
+  /healthcheck:
+    get:
+      summary: Get health information for this application
+      description: This operation is suitable for detecting if an application can
+        safely be used or if it has reached a state where it should not receive more
+        traffic. This functionality is typically relied upon by middleware like load
+        balancers.
+      operationId: get
+      responses:
+        200:
+          description: The application can receive traffic.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+        503:
+          description: Stop routing traffic to this application.
+  /authentication/start:
+    post:
+      tags:
+      - authentication
+      summary: Start authentication toward Encap
+      description: 'Expect: status and complete url'
+      operationId: authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MobileIDAuthRequest'
+      responses:
+        500:
+          description: The server encountered an internal error. Please retry the
+            request.
+        400:
+          description: The request was invalid. See body for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        401:
+          description: The unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        200:
+          description: The authentication request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileIDAuthStartResponse'
+      security:
+      - mobileidOauth2Security:
+        - client.mobileid
+  /authentication/status/{transactionid}:
+    get:
+      tags:
+      - authentication
+      summary: Get status of ongoing authentication
+      description: 'Expect: status (PENDING|DONE)'
+      operationId: checkAuthStatus
+      parameters:
+      - name: transactionid
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        500:
+          description: The server encountered an internal error. Please retry the
+            request.
+        400:
+          description: The request was invalid. See body for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        401:
+          description: The unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        200:
+          description: Check status request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileIDStatusResponse'
+      security:
+      - mobileidOauth2Security:
+        - client.mobileid
+  /authentication/complete/{transactionid}:
+    get:
+      tags:
+      - authentication
+      summary: Complete ongoing authentication
+      description: 'Expect: final authentication result'
+      operationId: completeAuth
+      parameters:
+      - name: transactionid
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        500:
+          description: The server encountered an internal error. Please retry the
+            request.
+        400:
+          description: The request was invalid. See body for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        401:
+          description: The unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        200:
+          description: Complete authentication request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileIDBaseResponse'
+      security:
+      - mobileidOauth2Security:
+        - client.mobileid
+  /authentication/devices/{externalref}:
+    get:
+      tags:
+      - authentication
+      summary: Get devices
+      description: 'Expect: List of valid devices for aprticular account'
+      operationId: getDevices
+      parameters:
+      - name: externalref
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        500:
+          description: The server encountered an internal error. Please retry the
+            request.
+        400:
+          description: The request was invalid. See body for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        401:
+          description: The unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        200:
+          description: Get devices request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileIDStatusResponse'
+      security:
+      - mobileidOauth2Security:
+        - client.mobileid
+  /registration/start:
+    post:
+      tags:
+      - registration
+      summary: Start registration toward Encap
+      description: 'Expect: activation code, status and complete url'
+      operationId: registration
+      requestBody:
+        description: The registration request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MobileIDRegRequest'
+        required: true
+      responses:
+        500:
+          description: The server encountered an internal error. Please retry the
+            request.
+        400:
+          description: The request was invalid. See body for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        401:
+          description: The unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        200:
+          description: The registration request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileIDRegStartResponse'
+      security:
+      - mobileidOauth2Security:
+        - client.mobileid
+  /registration/complete/{transactionid}:
+    get:
+      tags:
+      - registration
+      summary: Complete ongoing registration
+      description: 'Expect: final registration result'
+      operationId: completeReg
+      parameters:
+      - name: transactionid
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        500:
+          description: The server encountered an internal error. Please retry the
+            request.
+        400:
+          description: The request was invalid. See body for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        401:
+          description: The unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        200:
+          description: Complete registration request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileIDBaseResponse'
+      security:
+      - mobileidOauth2Security:
+        - client.mobileid
+  /registration/status/{transactionid}:
+    get:
+      tags:
+      - registration
+      summary: Get status of ongoing registration
+      description: 'Expect: status (PENDING|DONE)'
+      operationId: checkRegStatus
+      parameters:
+      - name: transactionid
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        500:
+          description: The server encountered an internal error. Please retry the
+            request.
+        400:
+          description: The request was invalid. See body for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        401:
+          description: The unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientProblem'
+        200:
+          description: Check status request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileIDStatusResponse'
+      security:
+      - mobileidOauth2Security:
+        - client.mobileid
+  /application.wadl:
+    get:
+      operationId: getWadl
+      responses:
+        default:
+          description: default response
+          content:
+            application/vnd.sun.wadl+xml: {}
+            application/xml: {}
+  /application.wadl/{path}:
+    get:
+      operationId: getExternalGrammar
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: default response
+          content:
+            application/xml: {}
+components:
+  schemas:
+    HealthCheck:
+      type: object
+    ClientProblem:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        type:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+    MobileIDAuthStartResponse:
+      type: object
+      properties:
+        statusUrl:
+          type: string
+        completeUrl:
+          type: string
+    MobileIDAuthRequest:
+      type: object
+      properties:
+        externalRef:
+          type: string
+        deviceId:
+          type: string
+        deviceName:
+          type: string
+        resultMode:
+          type: string
+          enum:
+          - POLLING
+          - NOTIFICATION
+        notificationUrl:
+          type: string
+    MobileIDStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+    MobileIDBaseResponse:
+      type: object
+      properties:
+        externalRef:
+          type: string
+        deviceProperties:
+          type: object
+          additionalProperties:
+            type: string
+    MobileIDRegStartResponse:
+      type: object
+      properties:
+        activationCode:
+          type: string
+        statusUrl:
+          type: string
+        completeUrl:
+          type: string
+    MobileIDRegRequest:
+      type: object
+      properties:
+        externalRef:
+          type: string
+        accountProperties:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScidProperty'
+        deviceName:
+          type: string
+        resultMode:
+          type: string
+          enum:
+          - POLLING
+          - NOTIFICATION
+        notificationUrl:
+          type: string
+    ScidProperty:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+  securitySchemes:
+    mobileidOauth2Security:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    mobileidOauth2SecurityNotWorking:
+      type: oauth2
+      description: Signicat OAuth security with clientCredentials
+      in: header
+      flows:
+        clientCredentials:
+          tokenUrl: /oidc/token
+          scopes:
+            client.mobileid: MobileID client scope
+      openIdConnectUrl: /oidc
